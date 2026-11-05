@@ -441,8 +441,11 @@ ejecucion se conservan; esta configuracion no los elimina ni los modifica.
 y envios pendientes en SQLite; una entrega fallida no repite el RPA.
 No requiere FastAPI en la maquina Windows.
 
-Configurar `BACKEND_API_URL`, `BACKEND_API_TOKEN`, `ROBOT_ID` e
-`INTERVALO_CONSULTA_SEGUNDOS` en `.env` y ejecutar:
+Configurar `BACKEND_API_URL`, `BACKEND_LOGIN_URL`, `BACKEND_EMAIL`,
+`BACKEND_PASSWORD`, `ROBOT_ID` e `INTERVALO_CONSULTA_SEGUNDOS` en `.env`
+o inyectarlas en el entorno. `BACKEND_AUTH_MODE=login` es el modo predeterminado.
+El correo y la contraseña de esta API son independientes de la cuenta ACME.
+Ejecutar:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
@@ -563,3 +566,38 @@ por extensión si se guardan fuera de las carpetas habituales.
 Se conservan como versionables el código, los README, `ejecutar.bat`, los
 selectores no sensibles y `.env.example` sin valores privados. `.gitignore` actúa
 sobre archivos completos; los secretos no deben escribirse dentro del código.
+
+
+## Autenticacion HTTP con renovacion
+
+El worker usa el cliente reutilizable `integraciones/api_http.py`: hace POST
+exactamente a BACKEND_LOGIN_URL con JSON `correo` y `password`. La respuesta debe
+ser HTTP 200 con access_token, refresh_token, token_type=Bearer y expires_in
+(numero positivo de segundos). No usa el navegador para iniciar esa sesion.
+Los endpoints de negocio siguen bajo BACKEND_API_URL y el refresh es
+POST /auth/refresh con `refresh_token`, sin Bearer, devolviendo los cuatro campos
+con el refresh nuevo. Las URLs deben ser HTTPS sin credenciales en la URL.
+
+Renueva antes de vencer o una sola vez despues de un 401. Segundo 401, refresh
+rechazado o refresh incierto detienen el worker conservando el trabajo pendiente.
+Un 403 no renueva. Los tokens solo viven en memoria. El envio multipart de los
+reportes se reconstruye completo despues del refresh; no se repite el RPA.
+El backend debe rechazar 401 antes de ejecutar efectos y aplicar idempotencia
+segun el contrato de trabajos. El cliente no convierte operaciones inciertas
+en nuevas ejecuciones automaticas.
+
+```powershell
+.\ejecutar.bat api-verificar
+```
+
+Este comando hace login y GET /auth/me, sin navegador, historial ni correos.
+Las variables de ejemplo estan en `.env.api.example`; nunca versionar los valores
+reales. Puede inyectarse la contraseña desde un gestor de secretos; este proyecto
+no obtiene directamente los secretos API desde Key Vault.
+
+El modo anterior requiere seleccionar explicitamente BACKEND_AUTH_MODE=token y
+BACKEND_API_TOKEN; no tiene refresh. No hay fallback de login fallido a ese token.
+El worker conserva su contrato existente /solicitudes, con input binario y
+resultado multipart. Las nuevas rutas /trabajos y exports JSON de la propuesta
+web requieren una adaptacion separada. Las pruebas usan servicios simulados;
+no se valida aqui el backend real.

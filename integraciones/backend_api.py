@@ -5,6 +5,11 @@ from pathlib import Path
 import re
 from urllib.parse import urlsplit
 
+from integraciones.api_http import (
+    ClienteAPI, ConfiguracionAPI, ErrorAPI as ErrorHTTP,
+    ErrorTemporalAPI, ErrorAutenticacionAPI,
+)
+
 try:
     import requests
 except ModuleNotFoundError:
@@ -33,8 +38,14 @@ def validar_configuracion_backend(config):
     if (url.scheme != 'https' or not url.netloc or url.username or url.password
             or url.query or url.fragment):
         raise ValueError('BACKEND_API_URL debe ser una URL HTTPS sin credenciales, query ni fragmento')
-    if not config.backend_api_token or any(c in config.backend_api_token for c in '\r\n'):
-        raise ValueError('Falta BACKEND_API_TOKEN o su formato es invalido')
+    if config.backend_auth_mode == 'login':
+        ConfiguracionAPI(config.backend_api_url, config.backend_email,
+                         config.backend_password, config.backend_login_url)
+    elif config.backend_auth_mode == 'token':
+        if not config.backend_api_token or any(c in config.backend_api_token for c in '\r\n'):
+            raise ValueError('Falta BACKEND_API_TOKEN o su formato es invalido')
+    else:
+        raise ValueError('BACKEND_AUTH_MODE debe ser login o token')
     if not re.fullmatch(r'[A-Za-z0-9_-]{1,128}', config.robot_id):
         raise ValueError('ROBOT_ID debe contener entre 1 y 128 letras ASCII, numeros, guiones o guiones bajos')
     if not math.isfinite(config.intervalo_consulta_segundos) or config.intervalo_consulta_segundos <= 0:
@@ -48,11 +59,34 @@ class ClienteBackend:
             raise RuntimeError('Falta requests: ejecute .\\.venv\\Scripts\\python.exe -m pip install -r requirements.txt')
         self.config = config
         self.session = session if session is not None else requests.Session()
+        if session is None:
+            self.session.trust_env = False
+        self.autenticado = (ClienteAPI(ConfiguracionAPI(
+            config.backend_api_url, config.backend_email, config.backend_password,
+            config.backend_login_url), session=self.session)
+            if config.backend_auth_mode == 'login' else None)
 
     def cerrar(self):
-        self.session.close()
+        if self.autenticado is not None:
+            self.autenticado.cerrar()
+        else:
+            self.session.close()
 
     def _peticion(self, metodo, ruta, **kwargs):
+        if self.autenticado is not None:
+            try:
+                return self.autenticado.solicitar(
+                    metodo, ruta, datos=kwargs.get('json'), archivos=kwargs.get('files'),
+                    stream=kwargs.get('stream', False))
+            except ErrorAutenticacionAPI as error:
+                raise ErrorAPIPermanente(str(error)) from None
+            except ErrorTemporalAPI as error:
+                # Refresh incierto: detener el worker, conservando el trabajo durable.
+                if self.autenticado.autenticacion_bloqueada:
+                    raise ErrorAPIPermanente(str(error)) from None
+                raise ErrorAPI(str(error)) from None
+            except ErrorHTTP as error:
+                raise ErrorAPIPermanente(str(error)) from None
         try:
             respuesta = self.session.request(
                 metodo, self.config.backend_api_url + ruta,

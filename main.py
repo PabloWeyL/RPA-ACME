@@ -21,6 +21,7 @@ def entero_positivo(valor):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="RPA ACME: consulta de Work Items y descarga de reportes mensuales")
     comandos = parser.add_subparsers(dest="comando")
+    comandos.add_parser('api-verificar', help='Verificar login HTTP y acceso a /auth/me')
     todos = comandos.add_parser("procesar", help="Procesar todos los Excel compatibles de CARPETA_INPUTS (predeterminado)")
     todos.add_argument("--limite", type=entero_positivo, help="Maximo de tareas por archivo y proceso")
     consulta = comandos.add_parser("consultar", help="Consultar Work Items con todos los Excel compatibles de CARPETA_INPUTS")
@@ -31,6 +32,12 @@ def main(argv=None):
     config = None
     try:
         config = cargar_configuracion()
+        if args.comando == 'api-verificar':
+            from config.api import crear_cliente_api
+            with crear_cliente_api() as cliente:
+                cliente.verificar()
+            print('Conexion API autenticada correctamente.')
+            return 0
         if not config.modulo_scraping:
             print("MODULO_SCRAPING=false: automatizacion desactivada; no se iniciaron tareas ni correos")
             return 0

@@ -45,6 +45,10 @@ class Configuracion:
     retencion_logs_meses: int = 12
     backend_api_url: str = ''
     backend_api_token: str = field(default='', repr=False)
+    backend_auth_mode: str = 'login'
+    backend_login_url: str = ''
+    backend_email: str = field(default='', repr=False)
+    backend_password: str = field(default='', repr=False)
     robot_id: str = ''
     intervalo_consulta_segundos: float = 10
 
@@ -64,7 +68,7 @@ class Configuracion:
         texto = str(texto)
         for secreto in (self.password, self.email, self.correo_password,
                         self.correo_password.replace(" ", ""), self.correo_usuario,
-                        self.backend_api_token):
+                        self.backend_api_token, self.backend_email, self.backend_password):
             if secreto:
                 texto = texto.replace(secreto, "[OCULTO]")
         return texto
@@ -124,6 +128,10 @@ def cargar_configuracion():
         retencion_logs_meses=int(valor("RETENCION_LOGS_MESES", defecto="12")),
         backend_api_url=valor('BACKEND_API_URL').strip().rstrip('/'),
         backend_api_token=valor('BACKEND_API_TOKEN').strip(),
+        backend_auth_mode=valor('BACKEND_AUTH_MODE', defecto='login').strip().lower(),
+        backend_login_url=valor('BACKEND_LOGIN_URL').strip(),
+        backend_email=valor('BACKEND_EMAIL').strip(),
+        backend_password=valor('BACKEND_PASSWORD'),
         robot_id=valor('ROBOT_ID').strip(),
         intervalo_consulta_segundos=float(valor('INTERVALO_CONSULTA_SEGUNDOS', defecto='10')),
     )

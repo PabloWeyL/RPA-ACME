@@ -1,0 +1,25 @@
+"""Configuracion optativa de API, independiente de la inicializacion del robot."""
+import os
+from pathlib import Path
+
+from dotenv import dotenv_values
+
+from integraciones.api_http import ClienteAPI, ConfiguracionAPI
+
+
+def crear_cliente_api(archivo=None, session=None):
+    archivo = Path(archivo) if archivo else Path(__file__).resolve().parents[1] / '.env'
+    valores = {**dotenv_values(archivo), **os.environ}
+
+    def obligatorio(nombre, conservar=False):
+        valor = str(valores.get(nombre) or '')
+        if not valor.strip():
+            raise ValueError('Falta variable: ' + nombre)
+        return valor if conservar else valor.strip()
+
+    config = ConfiguracionAPI(
+        url=obligatorio('BACKEND_API_URL'),
+        correo=obligatorio('BACKEND_EMAIL'),
+        password=obligatorio('BACKEND_PASSWORD', conservar=True),
+        login_url=obligatorio('BACKEND_LOGIN_URL'))
+    return ClienteAPI(config, session=session)

@@ -44,6 +44,7 @@ def excel(filas):
 
 def configuracion(**cambios):
     valores = dict(backend_api_url='https://backend.example.test/api/rpa',
+                   backend_auth_mode='token',
                    backend_api_token='token-privado-de-prueba', robot_id='acme-windows-01')
     valores.update(cambios)
     return Configuracion(**valores)
