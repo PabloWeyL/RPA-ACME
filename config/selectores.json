@@ -1,0 +1,28 @@
+{
+  "login": {
+    "ruta": "/login",
+    "email": "#email",
+    "password": "#password",
+    "enviar": "button[type='submit']",
+    "error": ".alert-danger, .help-block, .invalid-feedback",
+    "logout": "a[href*='/logout']"
+  },
+  "reportes_mensuales": {
+    "ruta": "/reports/download",
+    "proveedor_taxid": "#vendorTaxID, #vendorTaxId, #vendorTaxid, input[name='vendorTaxID'], input[name='vendorTaxId']",
+    "mes": "#reportMonth, #month, select[name='month'], select[name='reportMonth']",
+    "anio": "#reportYear, #year, select[name='year'], select[name='reportYear']",
+    "enviar": "#buttonDownload, button[type='submit'], input[type='submit']",
+    "error": ".alert-danger, .help-block, .invalid-feedback"
+  },
+  "work_items": {
+    "ruta": "/work-items",
+    "tabla": "table",
+    "filas": "tbody tr",
+    "enlace_detalle": "a[href*='/work-items/']",
+    "siguiente": "a[rel='next'], .pagination a[aria-label*='Next']",
+    "paginacion": ".pagination a, a.page-numbers",
+    "detalle": ".main-container",
+    "detalle_respaldo": "body > .container"
+  }
+}
