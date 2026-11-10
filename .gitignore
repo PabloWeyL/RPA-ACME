@@ -262,3 +262,9 @@ test-results/
 
 # Controles de publicacion y documentacion tecnica compartible.
 !.github/SECURITY.md
+
+# Entrega operativa: documentacion y pruebas fuera del repositorio.
+/docs/
+/tests/
+*.md
+!README.md

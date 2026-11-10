@@ -31,8 +31,6 @@ def validar_tecnico(valores):
     validar_modulos(('requests', 'dotenv', 'openpyxl', 'rpa'))
     validar_node()
     validar_chrome()
-    if not (RAIZ / 'tests/browser_dom.cjs').is_file():
-        raise ErrorArranque('Falta el fixture tests/browser_dom.cjs')
     acceso = configuracion_desde_valores(valores)
     if not acceso.api_key:
         raise ErrorArranque('Falta BACKEND_BOT_API_KEY')

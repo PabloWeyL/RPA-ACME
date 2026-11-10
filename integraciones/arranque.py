@@ -1,8 +1,6 @@
-"""Puerta común de arranque: validar, probar y solo después consultar la cola web."""
+"""Validaciones operativas previas al login y la consulta de la cola web."""
 from contextlib import closing
-from datetime import datetime
 import importlib.util
-import json
 import os
 from pathlib import Path
 import shutil
@@ -10,7 +8,6 @@ import sqlite3
 import subprocess
 import sys
 from tempfile import NamedTemporaryFile
-from uuid import uuid4
 
 from integraciones.weyland.archivos import bloqueo
 from integraciones.weyland.aplicacion_cola import verificar_migracion
@@ -100,56 +97,17 @@ def revisar_bases(base):
             revisar_integridad(ruta)
 
 
-def ejecutar_pruebas(raiz, valores, logs):
-    if os.getenv('BOT_PRUEBAS_EN_CURSO') == '1':
-        raise ErrorArranque('No se permite anidar suites de pruebas')
-    timeout = entero_configurado(valores, 'PRUEBAS_TIMEOUT_SEGUNDOS', 600)
-    if timeout > 3600:
-        raise ErrorArranque('PRUEBAS_TIMEOUT_SEGUNDOS no puede superar 3600')
-    nombre = 'pruebas_' + datetime.now().strftime('%d%m%Y-%H%M%S') + '_' + uuid4().hex[:8]
-    logs = probar_directorio(logs)
-    log = logs / (nombre + '.log')
-    estadisticas = log.with_suffix('.json')
-    entorno = {k: v for k, v in os.environ.items() if k.upper() in (
-        'PATH', 'SYSTEMROOT', 'WINDIR', 'TEMP', 'TMP', 'LOCALAPPDATA', 'APPDATA',
-        'USERPROFILE', 'HOME', 'COMSPEC', 'PATHEXT', 'PLAYWRIGHT_BROWSERS_PATH', 'CHROME_PATH')}
-    entorno.update(BOT_PRUEBAS_EN_CURSO='1', PYTHONIOENCODING='utf-8', PYTHONDONTWRITEBYTECODE='1')
-    print('[2/4] Ejecutando la suite completa aislada. Detalle:', log, flush=True)
-    try:
-        with log.open('wb') as salida:
-            resultado = subprocess.run([sys.executable, '-B', '-m', 'integraciones.autopruebas',
-                '--resultado', str(estadisticas)], cwd=raiz, env=entorno, stdout=salida,
-                stderr=subprocess.STDOUT, timeout=timeout, check=False)
-    except subprocess.TimeoutExpired:
-        raise ErrorArranque('Las pruebas superaron el timeout; revisar ' + str(log)) from None
-    if resultado.returncode != 0 or not estadisticas.is_file():
-        raise ErrorArranque('Las pruebas no aprobaron; no se consultara la cola. Revisar ' + str(log))
-    try:
-        datos = json.loads(estadisticas.read_text(encoding='utf-8'))
-    except (ValueError, OSError):
-        raise ErrorArranque('Resumen de pruebas ilegible; no se consultara la cola') from None
-    if (not isinstance(datos, dict) or type(datos.get('ejecutadas')) is not int or datos['ejecutadas'] < 1
-            or datos.get('aprobadas') is not True
-            or any(type(datos.get(k)) is not int or datos[k] != 0 for k in ('fallas', 'errores', 'omitidas'))):
-        raise ErrorArranque('No se confirmo una suite completa aprobada; revisar ' + str(log))
-    print('Tests aprobados:', datos['ejecutadas'], flush=True)
-    return datos
-
-
 def ejecutar_automatico(raiz, valores, validar, proceso):
-    if os.getenv('BOT_PRUEBAS_EN_CURSO') == '1':
-        raise ErrorArranque('No se permite iniciar otra suite ni el bot desde las pruebas')
     raiz = Path(raiz).resolve()
     # La configuracion incompleta falla antes de crear evidencia o autenticar.
     base = validar_backend(valores, raiz)
     (raiz / '.runtime').mkdir(parents=True, exist_ok=True)
     with bloqueo(raiz / '.runtime/arranque.lock'):
-        print('[1/4] Validando configuracion, dependencias y SQLite existente', flush=True)
+        print('[1/3] Validando configuracion y dependencias', flush=True)
         ajustes = validar()
+        print('[2/3] Comprobando directorios y bases SQLite existentes', flush=True)
+        probar_directorio(ajustes['logs'])
         probar_directorio(base)
         revisar_bases(base)
-        ejecutar_pruebas(raiz, valores, ajustes['logs'])
-        print('[3/4] Pruebas aprobadas; comprobando directorio y bases antes de consultar', flush=True)
-        revisar_bases(base)
-        print('[4/4] Iniciando login y consulta al backend; entradas locales no se cargan', flush=True)
+        print('[3/3] Iniciando login y consulta al backend; entradas locales no se cargan', flush=True)
         return proceso()
