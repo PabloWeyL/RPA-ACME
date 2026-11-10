@@ -73,7 +73,7 @@ class ReportesMensualesTests(unittest.TestCase):
         # Los selectores del sitio pertenecen a la instalacion, no a los datos temporales.
         (self.root / 'config').mkdir()
         (self.root / 'config/selectores.json').write_text((ROOT / 'config/selectores.json').read_text())
-        self.entrada = self.root / 'inputs/reportes_mensuales.xlsx'
+        self.entrada = self.root / 'input/reportes_mensuales.xlsx'
         self.entrada.parent.mkdir()
         self.escribir([['00123', 2025, 1, 3]])
         self.navegador = NavegadorMensualFalso(self.config)

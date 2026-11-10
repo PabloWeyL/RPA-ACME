@@ -294,9 +294,9 @@ class EjecutorTests(unittest.TestCase):
                 break
 
     def test_work_items_aisla_archivo_y_devuelve_resumen_y_excel(self):
-        (self.root / 'inputs').mkdir()
+        (self.root / 'input').mkdir()
         # La entrada manual de la carpeta raiz nunca se procesa por el worker.
-        (self.root / 'inputs/otro.xlsx').write_bytes(b'no debe abrirse')
+        (self.root / 'input/otro.xlsx').write_bytes(b'no debe abrirse')
         self.completar()
         self.assertEqual(len(self.backend.enviados), 1)
         remoto_id, resumen, contenido = self.backend.enviados[0]
@@ -304,7 +304,7 @@ class EjecutorTests(unittest.TestCase):
         self.assertEqual(self.procesos['consultar'].call_count, 1)
         entrada = self.procesos['consultar'].call_args.kwargs['entrada']
         self.assertEqual(entrada.name, 'entrada.xlsx')
-        self.assertNotEqual(entrada.parent, self.root / 'inputs')
+        self.assertNotEqual(entrada.parent, self.root / 'input')
         libro = load_workbook(BytesIO(contenido), read_only=True)
         self.assertEqual(libro.sheetnames, ['resultados', 'errores', 'resumen'])
         libro.close()

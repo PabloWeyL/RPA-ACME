@@ -21,9 +21,9 @@ class Configuracion:
     headless: bool = True
     timeout: float = 25
     max_intentos: int = 3
-    filtros: Path = Path("inputs/filtros.xlsx")
+    filtros: Path = Path("input/filtros.xlsx")
     db: Path = Path("temporales/acme.db")
-    reportes_input: Path = Path("inputs/reportes_mensuales.xlsx")
+    reportes_input: Path = Path("input/reportes_mensuales.xlsx")
     descargas: Path = Path("descargas/reportes_mensuales")
     correo_activo: bool = False
     correo_usuario: str = field(default="", repr=False)
@@ -41,7 +41,7 @@ class Configuracion:
     smtp_server: str = "smtp.gmail.com"
     smtp_port: int = 465
     correo_destinatarios_error: tuple = field(default=(), repr=False)
-    inputs: Path = Path("inputs")
+    inputs: Path = Path("input")
     retencion_logs_meses: int = 12
     backend_api_url: str = ''
     backend_api_token: str = field(default='', repr=False)
@@ -104,9 +104,9 @@ def cargar_configuracion():
         headless=os.getenv("ACME_HEADLESS", "true").lower() in ("true", "1", "si"),
         timeout=float(os.getenv("ACME_TIMEOUT", "25")),
         max_intentos=int(valor("MAX_REINTENTOS", "ACME_MAX_INTENTOS", "3")),
-        filtros=Path(valor("EXCEL_ENTRADA", "ACME_FILTROS", "inputs/filtros.xlsx")),
+        filtros=Path(valor("EXCEL_ENTRADA", "ACME_FILTROS", "input/filtros.xlsx")),
         db=Path(valor("DB_PATH", "ACME_DB", "temporales/acme.db")),
-        reportes_input=Path(valor("EXCEL_REPORTES_MENSUALES", "ACME_REPORTES_INPUT", "inputs/reportes_mensuales.xlsx")),
+        reportes_input=Path(valor("EXCEL_REPORTES_MENSUALES", "ACME_REPORTES_INPUT", "input/reportes_mensuales.xlsx")),
         descargas=Path(valor("CARPETA_DESCARGAS", "ACME_DESCARGAS", "descargas/reportes_mensuales")),
         correo_activo=booleano("MODULO_CORREO", "ACME_CORREO_ACTIVO"),
         correo_usuario=valor("EMAIL_REMITENTE", "ACME_CORREO_USUARIO").strip(),
@@ -124,7 +124,7 @@ def cargar_configuracion():
         smtp_server=valor("SMTP_SERVER", defecto="smtp.gmail.com").strip(),
         smtp_port=smtp_port,
         correo_destinatarios_error=lista("LISTA_DISTRIBUCION_ERROR"),
-        inputs=Path(valor("CARPETA_INPUTS", defecto="inputs")),
+        inputs=Path(valor("CARPETA_INPUTS", defecto="input")),
         retencion_logs_meses=int(valor("RETENCION_LOGS_MESES", defecto="12")),
         backend_api_url=valor('BACKEND_API_URL').strip().rstrip('/'),
         backend_api_token=valor('BACKEND_API_TOKEN').strip(),

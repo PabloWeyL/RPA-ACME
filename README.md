@@ -1,4 +1,21 @@
+## Arranque completo sin parametros
+
+Ejecutar `python main.py` o abrir `ejecutar.bat` sin argumentos. El arranque exige el contrato cola_actual, VM y codigo reales configurados; valida configuracion, dependencias, directorios y las bases SQLite existentes, ejecuta toda la suite aislada y solo si aprueba inicia login y /siguiente. No carga los inputs locales ni reutiliza la ultima solicitud. Un 204 termina con SIN_TRABAJO y salida 1.
+
+Si falla una comprobacion, no toma ejecuciones ni envia avisos de inicio del proceso. Las pruebas no leen el .env privado ni heredan sus secretos: usan temporales y servicios simulados. Fallos, omisiones, suite vacia o timeout bloquean el arranque. Evidencia por intento: logs/pruebas_DDMMYYYY-HHMMSS_identificador.log y su JSON, o la carpeta de logs configurada en el proyecto. PRUEBAS_TIMEOUT_SEGUNDOS vale 600 por defecto, maximo 3600.
+
+Las bases nuevas del negocio se crean dentro de su ejecucion web despues de la asignacion. La comprobacion previa de SQLite es de solo lectura; no crea ni borra tareas. Key Vault, Monitor y SQL reales se utilizan en el flujo autorizado; la suite simulada no certifica su conectividad productiva.
+
+Los comandos explicitos `procesar`, `api-verificar` y `web-procesar` conservan su uso y no vuelven a lanzar la suite. `procesar` es local. En ACME se conserva tambien `consultar`/`descargar-reportes`; para el arranque sin parametros seleccionar `ACME_PROCESO_WEB=consultar` o `descargar-reportes` en .env y su codigo registrado.
+
+> **Conexión vigente:** `BACKEND_CONTRATO=cola_actual`. Ver [guía del backend actual](docs/GUIA_BACKEND_ACTUAL.md). `web-procesar` recibe el ID en `/siguiente`; las instrucciones por ID manual son legacy.
+
 # ¿Qué hace este proceso?
+
+## Conexion web comun
+
+Los cuatro bots utilizan el mismo paquete `integraciones/weyland` v2.0.0. Guia vigente: [conexion comun](docs/INTEGRACION_WEYLAND_COMUN.md). Inicio mediante `/siguiente` con IDs obligatorios, sin seleccion automatica. Requiere habilitar el contrato por ID en el backend; login correcto no valida esa habilitacion.
+
 
 Este bot está directamente en `GitHub/RPA-ACME/`. Sus archivos `main.py`,
 `ejecutar.bat`, `.env` y `.venv` están en esa raíz. Los proyectos vecinos
@@ -51,7 +68,7 @@ enero, febrero y marzo de ese proveedor. No sube reportes anuales.
 
 ## Qué debe preparar la persona
 
-Colocar los Excel en `inputs/` o en la carpeta configurada. El robot reconoce el
+Colocar los Excel en `input/` o en la carpeta configurada. El robot reconoce el
 proceso por sus encabezados; el nombre del archivo puede ser cualquiera.
 También debe estar preparada la configuración de acceso y del navegador.
 Los ejemplos siguientes no contienen credenciales reales.
@@ -86,7 +103,7 @@ opciones de configuración para preparar y operar el robot.
 
 ## Probar
 
-Todos los comandos descubren los Excel de `CARPETA_INPUTS`, por defecto `inputs/`.
+Los comandos locales descubren los Excel de `CARPETA_INPUTS`, por defecto `input/`.
 Para procesar ambos tipos automaticamente:
 
 ```powershell
@@ -110,7 +127,7 @@ Funciona aunque se invoque desde otra carpeta. No incluye pausa, para permitir
 su uso con el Programador de tareas; al abrirlo con doble clic, la ventana se
 cierra al finalizar. Si falta el entorno virtual, muestra un error y devuelve 1.
 
-Los Excel se leen desde `inputs/` (o `CARPETA_INPUTS` si se configura otra ruta).
+Los Excel se leen desde `input/` (o `CARPETA_INPUTS` si se configura otra ruta).
 No se selecciona un archivo por su nombre: se intenta procesar cada `.xlsx` y
 `.xlsm` compatible que haya directamente en esa carpeta. Los temporales `~$` se
 ignoran; las subcarpetas no se recorren. Los encabezados determinan qué proceso
@@ -179,7 +196,7 @@ Para configurar otra instalacion, copiar `.env.example` a `.env` y completar
 ## Excel de entrada
 
 Crear o editar cualquier Excel de la carpeta de entrada (por ejemplo,
-`inputs/filtros.xlsx`), con estas dos columnas en la hoja activa:
+`input/filtros.xlsx`), con estas dos columnas en la hoja activa:
 
 | tipo | estado |
 |---|---|
@@ -202,7 +219,7 @@ omiten durante el descubrimiento por carpeta.
 
 El comando `descargar-reportes` usa **Reports > Download Monthly Report**.
 Lee todos los Excel compatibles de la carpeta de entrada, por ejemplo
-`inputs/reportes_mensuales.xlsx`, con cuatro columnas en la hoja activa:
+`input/reportes_mensuales.xlsx`, con cuatro columnas en la hoja activa:
 
 | proveedor_taxid | anio | mes_desde | mes_hasta |
 |---|---|---|---|
@@ -399,7 +416,7 @@ contrasena SMTP para acceder a la web.
 | `NOMBRE_PROCESO`, `NOMBRE_PROCESO_TEXTO` | Identificacion incluida en el cuerpo de los correos. |
 | `RUTA_BASE` | Base de las rutas de datos relativas; vacia usa la carpeta del proyecto. Los selectores y el runtime pertenecen a la instalacion. |
 | `DB_PATH` | Archivo SQLite del historial. |
-| `CARPETA_INPUTS` | Carpeta que los comandos recorren siempre; `inputs` por defecto. Se procesan todos los Excel compatibles, sin filtrar por nombre. |
+| `CARPETA_INPUTS` | Carpeta que los comandos locales recorren; `input` por defecto. Se procesan todos los Excel compatibles, sin filtrar por nombre. |
 | `EXCEL_ENTRADA` | Ruta individual de compatibilidad para llamadas Python a `consultar`; la CLI descubre todos los archivos en `CARPETA_INPUTS`. |
 | `EXCEL_REPORTES_MENSUALES` | Ruta individual de compatibilidad para llamadas Python a `descargar_reportes`; la CLI usa `CARPETA_INPUTS`. |
 | `EXCEL_SALIDA` | Carpeta de salida indicada por la ruta del archivo, por ejemplo `reportes/resultados.xlsx` usa `reportes/`. Los nombres finales siguen siendo propios de cada ejecucion para conservar el historial. Tambien acepta directamente una carpeta. |
@@ -568,7 +585,9 @@ selectores no sensibles y `.env.example` sin valores privados. `.gitignore` act�
 sobre archivos completos; los secretos no deben escribirse dentro del código.
 
 
-## Autenticacion HTTP con renovacion
+## Autenticacion HTTP con renovacion (contrato legacy)
+
+Esta seccion describe el cliente anterior para APIs con JWT. Para el backend Django real usar `BACKEND_AUTH_MODE=weyland` y la [guia local](docs/conexion_weyland_local.md): cookies/CSRF, sin endpoint de refresh JWT. `web-procesar` sustituye al worker legacy para este backend.
 
 El worker usa el cliente reutilizable `integraciones/api_http.py`: hace POST
 exactamente a BACKEND_LOGIN_URL con JSON `correo` y `password`. La respuesta debe
@@ -601,3 +620,16 @@ El worker conserva su contrato existente /solicitudes, con input binario y
 resultado multipart. Las nuevas rutas /trabajos y exports JSON de la propuesta
 web requieren una adaptacion separada. Las pruebas usan servicios simulados;
 no se valida aqui el backend real.
+
+
+## Backend Weyland local
+
+Login, sesion, ejecuciones web y recuperacion: [guia de conexion](docs/conexion_weyland_local.md). Usar `ejecutar.bat api-verificar` y `ejecutar.bat web-procesar --id-solicitud ID_REAL`.
+
+
+Cliente portable para otras maquinas y proyectos: [modulos y ejemplos de reutilizacion](docs/cliente_backend_reutilizable.md). El registro de maquina/proceso se configura posteriormente; no es necesario para construir el cliente ni verificar login.
+
+
+Flujo actual por la solicitud seleccionada por el operador: [ejecucion por ID](docs/ejecucion_por_solicitud.md). `solicitud_id` y `ejecucion_id` web coinciden. Reutilizacion automatica deshabilitada.
+
+Plan para el desarrollador web: [contrato de integracion, endpoints y JSON](docs/PLAN_INTEGRACION_WEB_BOTS.md). Incluye OpenAPI y ejemplos; distingue el backend actual de las operaciones propuestas que requieren implementacion coordinada.

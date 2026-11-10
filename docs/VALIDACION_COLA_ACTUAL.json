@@ -1,0 +1,33 @@
+{
+  "fecha_validacion": "2026-11-10",
+  "proyecto": "RPA-ACME",
+  "contrato": "cola_actual",
+  "pruebas_aprobadas": 227,
+  "fallas": 0,
+  "backend_modificado": false,
+  "comando": "python -B -m unittest discover -s tests -v",
+  "log": "temporales/pruebas_migracion_cola.log",
+  "sdk": {
+    "modulos": 12,
+    "identicos_a_supermercados": true
+  },
+  "alcance": [
+    "API HTTP local del contrato actual",
+    "login y CSRF",
+    "modalidad de input",
+    "negocio y export aislados",
+    "correo posterior a confirmacion",
+    "recuperacion de ACK perdido"
+  ],
+  "servicios_simulados": [
+    "backend Weyland",
+    "SMTP",
+    "Key Vault y Monitor cuando corresponde",
+    "sitio ACME o pagina local de Google Imagenes"
+  ],
+  "pendiente_real": [
+    "registrar/configurar VM y proceso donde falten",
+    "validar API key y permisos",
+    "conectividad de servicios externos en VM real"
+  ]
+}

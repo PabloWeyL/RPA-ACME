@@ -1,0 +1,24 @@
+{
+  "ejecutadas": 243,
+  "fallas": 0,
+  "errores": 0,
+  "omitidas": 0,
+  "aprobadas": true,
+  "fecha": "2026-11-10",
+  "proyecto": "RPA-ACME",
+  "comando": "python main.py",
+  "contrato": "cola_actual",
+  "log": "temporales/validacion_arranque.log",
+  "runner": "python -B -m integraciones.autopruebas --resultado temporales/validacion_arranque.json",
+  "backend_real_consultado": false,
+  "backend_modificado": false,
+  "cli_sin_parametros": "Validado; configuracion incompleta bloquea antes de tomar trabajo",
+  "escenarios": [
+    "arranque sin parametros y API local",
+    "fallos de configuracion y suite bloquean backend",
+    "SQLite corrupto bloquea; revision en solo lectura",
+    "suite vacia/omitida/timeout bloquea",
+    "no heredar secretos ni cargar .env privado",
+    "no recursion de pruebas"
+  ]
+}

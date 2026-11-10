@@ -16,7 +16,7 @@ class EntradasTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory(prefix='acme-entradas-')
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
-        self.carpeta = self.root / 'inputs'
+        self.carpeta = self.root / 'input'
         self.carpeta.mkdir()
 
     def excel(self, nombre, encabezados, filas=(), otra_hoja=False):
@@ -91,10 +91,10 @@ class EntradasTests(unittest.TestCase):
             mensual = stack.enter_context(patch('main.descargar_reportes', return_value=({'estado': 'completado'}, self.root / 'mensual.xlsx')))
             if fallo is not None:
                 consulta.side_effect = fallo
-            codigo = aplicacion.main(list(argumentos))
+            codigo = aplicacion.main(list(argumentos) or ['procesar'])
         return codigo, consulta, mensual, base
 
-    def test_sin_comando_procesa_todos_y_pasa_la_ruta_correcta(self):
+    def test_procesar_todos_pasa_la_ruta_correcta(self):
         a = self.excel('a.xlsx', ['tipo', 'estado'])
         b = self.excel('b.xlsx', ['tipo', 'estado'])
         c = self.excel('c.xlsx', ['proveedor_taxid', 'anio', 'mes_desde', 'mes_hasta'])
@@ -133,12 +133,12 @@ class EntradasTests(unittest.TestCase):
 
     def test_recupera_excel_pendiente_aunque_no_queden_entradas(self):
         from config.base_datos import BaseDatos
-        config = Configuracion(root=self.root, inputs=Path('inputs'))
+        config = Configuracion(root=self.root, inputs=Path('input'))
         base = BaseDatos(config.ruta(config.db))
         ejecucion, _ = base.iniciar(self.root / 'entrada.xlsx', None)
         base.finalizar(ejecucion)
         with patch.object(aplicacion, 'cargar_configuracion', return_value=config), patch.object(aplicacion, 'consultar') as consultar:
-            self.assertEqual(aplicacion.main([]), 1)  # Sin nuevas entradas.
+            self.assertEqual(aplicacion.main(['procesar']), 1)  # Sin nuevas entradas.
         consultar.assert_not_called()
         self.assertEqual(len(list(config.carpeta_reportes.glob('work_items_*.xlsx'))), 1)
         self.assertEqual(base.recuperar_interrumpidas(), [])
@@ -167,7 +167,7 @@ class EntradasTests(unittest.TestCase):
                     self.excel('Cualquier otro nombre.xlsm', ['estado', 'tipo'])]
         mensual = self.excel('Proveedor de prueba.xlsx', ['proveedor_taxid', 'anio', 'mes_desde', 'mes_hasta'], [('A', 2025, 1, 1)])
         config = Configuracion(root=self.root)
-        self.assertEqual(config.inputs, Path('inputs'))
+        self.assertEqual(config.inputs, Path('input'))
         (self.root / 'config').mkdir()
         (self.root / 'config/selectores.json').write_text((ROOT / 'config/selectores.json').read_text(encoding='utf-8'))
         def consultar_falso(config, limite, entrada):
@@ -175,7 +175,7 @@ class EntradasTests(unittest.TestCase):
         def mensual_falso(config, entrada, limite):
             return descargar_reportes(config, entrada, limite, fabrica_navegador=NavegadorMensualFalso)
         with patch.object(aplicacion, 'cargar_configuracion', return_value=config), patch.object(aplicacion, 'consultar', side_effect=consultar_falso), patch.object(aplicacion, 'descargar_reportes', side_effect=mensual_falso):
-            self.assertEqual(aplicacion.main([]), 0)
+            self.assertEqual(aplicacion.main(['procesar']), 0)
         reportes = list(config.carpeta_reportes.glob('*.xlsx'))
         self.assertEqual(len(reportes), 3)
         for reporte in reportes:

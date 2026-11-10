@@ -1,0 +1,210 @@
+{
+  "aviso": "Contrato propuesto. Datos, hashes, IDs y credenciales ficticios; no son fixtures binarios reales.",
+  "csrf_respuesta": {
+    "csrf": "TOKEN_CSRF_OPACO"
+  },
+  "login_peticion": {
+    "correo": "robot.supermercados@example.test",
+    "password": "CONTRASENA_DE_PRUEBA_NO_REAL"
+  },
+  "consulta_con_input": {
+    "solicitud_id": 123,
+    "ejecucion_id": 123,
+    "estado": "EN_COLA",
+    "empresa": {
+      "id": 10,
+      "nombre": "Empresa demo"
+    },
+    "proceso": {
+      "id": 3,
+      "codigo": "SUPERMERCADOS",
+      "version": "1.0"
+    },
+    "requiere_input": true,
+    "parametros": {},
+    "input": {
+      "archivo_id": 51,
+      "nombre": "Productos de hoy.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 20480,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "descarga": "/api/bot/ejecuciones/123/input"
+    },
+    "resultado": null,
+    "error": null
+  },
+  "consulta_sin_input": {
+    "solicitud_id": 124,
+    "ejecucion_id": 124,
+    "estado": "EN_COLA",
+    "empresa": {
+      "id": 10,
+      "nombre": "Empresa demo"
+    },
+    "proceso": {
+      "id": 3,
+      "codigo": "SUPERMERCADOS",
+      "version": "1.0"
+    },
+    "requiere_input": false,
+    "parametros": {
+      "producto": "leche",
+      "supermercado": "unimarc",
+      "marca": "Colun"
+    },
+    "input": null,
+    "resultado": null,
+    "error": null
+  },
+  "iniciar_peticion": {
+    "solicitud_id": 123,
+    "ejecucion_id": 123
+  },
+  "iniciar_respuesta": {
+    "solicitud_id": 123,
+    "ejecucion_id": 123,
+    "estado": "EN_PROCESO",
+    "empresa": {
+      "id": 10,
+      "nombre": "Empresa demo"
+    },
+    "proceso": {
+      "id": 3,
+      "codigo": "SUPERMERCADOS",
+      "version": "1.0"
+    },
+    "requiere_input": true,
+    "parametros": {},
+    "input": {
+      "archivo_id": 51,
+      "nombre": "Productos de hoy.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 20480,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "descarga": "/api/bot/ejecuciones/123/input"
+    },
+    "resultado": null,
+    "error": null
+  },
+  "reporte_metadatos": {
+    "solicitud_id": 123,
+    "ejecucion_id": 123,
+    "ejecucion_bot_id": "11111111111141118111111111111111",
+    "estado": "COMPLETADA",
+    "resumen": {
+      "procesados": 20,
+      "correctos": 19,
+      "errores": 1
+    },
+    "export": {
+      "nombre": "resultado_06112026-130000.zip",
+      "content_type": "application/zip",
+      "size_bytes": 40960,
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  },
+  "reporte_multipart": {
+    "archivo": "<bytes del ZIP>",
+    "metadatos": "{\"solicitud_id\": 123, \"ejecucion_id\": 123, \"ejecucion_bot_id\": \"11111111111141118111111111111111\", \"estado\": \"COMPLETADA\", \"resumen\": {\"procesados\": 20, \"correctos\": 19, \"errores\": 1}, \"export\": {\"nombre\": \"resultado_06112026-130000.zip\", \"content_type\": \"application/zip\", \"size_bytes\": 40960, \"sha256\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}}"
+  },
+  "reporte_respuesta": {
+    "solicitud_id": 123,
+    "ejecucion_id": 123,
+    "estado": "COMPLETADA",
+    "repetida": false,
+    "reporte": {
+      "archivo_id": 91,
+      "nombre": "resultado_06112026-130000.zip",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "descarga": "/api/bot/ejecuciones/123/reporte"
+    }
+  },
+  "consulta_completada": {
+    "solicitud_id": 123,
+    "ejecucion_id": 123,
+    "estado": "COMPLETADA",
+    "empresa": {
+      "id": 10,
+      "nombre": "Empresa demo"
+    },
+    "proceso": {
+      "id": 3,
+      "codigo": "SUPERMERCADOS",
+      "version": "1.0"
+    },
+    "requiere_input": true,
+    "parametros": {},
+    "input": {
+      "archivo_id": 51,
+      "nombre": "Productos de hoy.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 20480,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "descarga": "/api/bot/ejecuciones/123/input"
+    },
+    "resultado": {
+      "archivo_id": 91,
+      "nombre": "resultado_06112026-130000.zip",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "descarga": "/api/bot/ejecuciones/123/reporte"
+    },
+    "error": null
+  },
+  "error_peticion": {
+    "solicitud_id": 123,
+    "ejecucion_id": 123,
+    "ejecucion_bot_id": "11111111111141118111111111111111",
+    "codigo": "INPUT_INVALIDO",
+    "mensaje": "El archivo no contiene la columna producto.",
+    "reintentable": false
+  },
+  "error_respuesta": {
+    "solicitud_id": 123,
+    "ejecucion_id": 123,
+    "estado": "ERROR",
+    "repetida": false
+  },
+  "consulta_error": {
+    "solicitud_id": 123,
+    "ejecucion_id": 123,
+    "estado": "ERROR",
+    "empresa": {
+      "id": 10,
+      "nombre": "Empresa demo"
+    },
+    "proceso": {
+      "id": 3,
+      "codigo": "SUPERMERCADOS",
+      "version": "1.0"
+    },
+    "requiere_input": true,
+    "parametros": {},
+    "input": {
+      "archivo_id": 51,
+      "nombre": "Productos de hoy.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 20480,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "descarga": "/api/bot/ejecuciones/123/input"
+    },
+    "resultado": null,
+    "error": {
+      "codigo": "INPUT_INVALIDO",
+      "mensaje": "El archivo no contiene la columna producto."
+    }
+  },
+  "error_http": {
+    "error": {
+      "codigo": "ESTADO_NO_EJECUTABLE",
+      "mensaje": "La solicitud no está habilitada para iniciar.",
+      "solicitud_id": 123
+    }
+  },
+  "descarga_headers": {
+    "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "Content-Length": "20480",
+    "Content-Disposition": "attachment; filename=\"entrada.xlsx\"",
+    "X-Content-SHA256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "Cache-Control": "no-store"
+  }
+}

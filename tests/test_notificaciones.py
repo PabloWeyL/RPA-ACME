@@ -197,7 +197,7 @@ class NotificacionesFlujoTests(unittest.TestCase):
         self.config = Configuracion(root=self.root, correo_activo=True, correo_usuario='robot@example.test',
                                     correo_password='clave', correo_destinatarios=('uno@example.test',), correo_cada=2,
                                     correo_destinatarios_error=('operacion@example.test',))
-        (self.root / 'inputs').mkdir()
+        (self.root / 'input').mkdir()
         (self.root / 'config').mkdir()
         (self.root / 'config/selectores.json').write_text((ROOT / 'config/selectores.json').read_text())
         for nombre, filas in (
@@ -207,7 +207,7 @@ class NotificacionesFlujoTests(unittest.TestCase):
             libro = Workbook()
             for fila in filas:
                 libro.active.append(fila)
-            libro.save(self.root / 'inputs' / nombre)
+            libro.save(self.root / 'input' / nombre)
             libro.close()
         self.mensajes = []
         self.observar = None
@@ -279,7 +279,7 @@ class NotificacionesFlujoTests(unittest.TestCase):
         self.assertEqual(self.mensajes[-1]['To'], 'operacion@example.test')
 
     def test_entrada_mensual_invalida_envia_final_error(self):
-        (self.root / 'inputs/reportes_mensuales.xlsx').unlink()
+        (self.root / 'input/reportes_mensuales.xlsx').unlink()
         resumen, _ = self.mensuales()
         self.assertEqual(resumen['estado'], 'error')
         self.assertEqual(len(self.mensajes), 2)

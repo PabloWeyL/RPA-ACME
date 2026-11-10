@@ -80,14 +80,14 @@ class FlujoTests(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
         self.config = Configuracion(root=self.root, email="prueba@example.test", password="secreto-prueba", timeout=1)
-        (self.root / "inputs").mkdir()
+        (self.root / "input").mkdir()
         self.escribir_filtros([["tipo", "estado"], [None, None]])
 
     def escribir_filtros(self, filas):
         libro = Workbook()
         for fila in filas:
             libro.active.append(fila)
-        libro.save(self.root / "inputs/filtros.xlsx")
+        libro.save(self.root / "input/filtros.xlsx")
         libro.close()
 
     def ejecutar(self, items=None, errores=None, login_error=False, limite=10):
@@ -103,10 +103,10 @@ class FlujoTests(unittest.TestCase):
         self.assertEqual(len(seleccionar_items(items, [Filtro()])), 3)
 
     def test_excel_cabecera_y_blancos(self):
-        self.assertEqual(leer_filtros(self.root / "inputs/filtros.xlsx"), [Filtro()])
+        self.assertEqual(leer_filtros(self.root / "input/filtros.xlsx"), [Filtro()])
         self.escribir_filtros([["otro", "estado"], ["WI5", "Open"]])
         with self.assertRaisesRegex(ValueError, "encabezados"):
-            leer_filtros(self.root / "inputs/filtros.xlsx")
+            leer_filtros(self.root / "input/filtros.xlsx")
 
     def test_diez_detalles_paginacion_reporte_y_estados(self):
         resumen, reporte, _ = self.ejecutar()
@@ -208,7 +208,7 @@ class FlujoTests(unittest.TestCase):
 
     def test_guardado_es_atomico(self):
         base = BaseDatos(self.config.ruta(self.config.db))
-        ejecucion, archivo_id = base.iniciar(self.root / "inputs/filtros.xlsx", 1)
+        ejecucion, archivo_id = base.iniciar(self.root / "input/filtros.xlsx", 1)
         base.encolar(ejecucion, archivo_id, [item(1)], 1)
         tarea = base.tareas(ejecucion)[0]
         with base.conexion() as con:
@@ -267,7 +267,7 @@ class FlujoTests(unittest.TestCase):
 
     def test_ejecucion_interrumpida_se_recupera_sin_borrar_datos(self):
         base = BaseDatos(self.config.ruta(self.config.db))
-        ejecucion, archivo_id = base.iniciar(self.root / "inputs/filtros.xlsx", 2)
+        ejecucion, archivo_id = base.iniciar(self.root / "input/filtros.xlsx", 2)
         base.encolar(ejecucion, archivo_id, [item(1), item(2)], 2)
         base.guardar(base.tareas(ejecucion)[0], "Detalle WIID 1")
         self.assertEqual(base.recuperar_interrumpidas(), [ejecucion])

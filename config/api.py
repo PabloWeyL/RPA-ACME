@@ -10,6 +10,9 @@ from integraciones.api_http import ClienteAPI, ConfiguracionAPI
 def crear_cliente_api(archivo=None, session=None):
     archivo = Path(archivo) if archivo else Path(__file__).resolve().parents[1] / '.env'
     valores = {**dotenv_values(archivo), **os.environ}
+    if valores.get('BACKEND_AUTH_MODE') == 'weyland':
+        from config.weyland import crear_cliente_weyland
+        return crear_cliente_weyland(archivo, session, valores=valores)
 
     def obligatorio(nombre, conservar=False):
         valor = str(valores.get(nombre) or '')
