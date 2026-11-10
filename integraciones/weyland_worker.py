@@ -99,7 +99,10 @@ def ejecutar_desde_config(proyecto, raiz, comando='procesar', solicitud_id=None)
         from integraciones.backend_actual import ejecutar_actual
         estado = ejecutar_actual(raiz, comando, valores)
         print('Weyland Automate:', estado['fase'], 'ID:', estado.get('ejecucion_id', 'SIN_TRABAJO'))
-        return 0 if estado['fase'] == 'COMPLETADA' else 1
+        from integraciones.diagnostico import diagnosticar_resultado
+        diagnostico = diagnosticar_resultado(estado)
+        print(diagnostico.texto())
+        return diagnostico.codigo
     if modo != 'por_id':
         raise ValueError('BACKEND_CONTRATO debe ser por_id o cola_actual')
     resultado = ejecutar_configurado(crear_cliente_api, valores, raiz, solicitud_id,

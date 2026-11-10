@@ -62,10 +62,15 @@ class NotificadorWeb:
             cola = ColaCorreo(carpeta / 'correo')
             cola.registrar(clave, remitente, destinatarios, mensaje.as_bytes(), datos)
             cola.procesar(lambda *args: enviar(config, *args), solo=clave)
-            return cola.entregado(clave)
+            aceptado = cola.entregado(clave)
+            if not aceptado:
+                print('CORREO_PENDIENTE: mensaje y adjuntos conservados; revisar correos-estado y recuperar sin repetir el proceso.')
+            return aceptado
 
 
 def enviar(config, remitente, destinatarios, mime):
+    if remitente.casefold() != config['remitente'].casefold():
+        raise ErrorEntrega('REMITENTE_CAMBIO', permanente=True)
     puerto = int(config['puerto'])
     if puerto not in (465, 587) or not config['host'] or not config['usuario'] or not config['password']:
         raise ErrorEntrega('CONFIGURACION_SMTP_INVALIDA', permanente=True)

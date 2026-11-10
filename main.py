@@ -9,6 +9,8 @@ from integraciones.reportes import generar_reporte
 from integraciones.proceso_mensual import descargar_reportes
 from integraciones.historial_mensual import HistorialMensual
 from integraciones.entradas import descubrir_entradas
+from integraciones.diagnostico import diagnosticar_error
+from integraciones.gestion_correo_web import agregar_comandos_correo
 
 
 def entero_positivo(valor):
@@ -28,6 +30,7 @@ def id_solicitud_positivo(valor):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="RPA ACME: consulta de Work Items y descarga de reportes mensuales")
     comandos = parser.add_subparsers(dest="comando")
+    agregar_comandos_correo(comandos)
     comandos.add_parser('api-verificar', help='Verificar login HTTP y perfil de sesion')
     web = comandos.add_parser('web-procesar', help='Ejecutar una orden liberada por Weyland Automate')
     web.add_argument('--id-solicitud', required=False, type=id_solicitud_positivo, help='ID seleccionado por el operador; mismo ID de ejecucion web')
@@ -44,13 +47,9 @@ def main(argv=None):
             from integraciones.arranque_web import ejecutar_sin_argumentos
             return ejecutar_sin_argumentos()
         except Exception as error:
-            from integraciones.arranque import ErrorArranque
-            from integraciones.weyland import ErrorWeyland
-            if isinstance(error, (ErrorArranque, ErrorWeyland, ValueError)):
-                print('Error de arranque:', error, file=sys.stderr)
-            else:
-                print('No se pudo completar el arranque; revisar configuracion y logs.', file=sys.stderr)
-            return 1
+            diagnostico = diagnosticar_error(error)
+            print(diagnostico.texto(), file=sys.stderr)
+            return diagnostico.codigo
     if args.comando == 'web-procesar':
         from config.weyland import leer_valores
         modo = str(leer_valores().get('BACKEND_CONTRATO') or 'por_id').strip().lower()
@@ -62,6 +61,14 @@ def main(argv=None):
             parser.error('cola_actual recibe el ID en siguiente; no enviar --id-solicitud')
     config = None
     try:
+        if args.comando.startswith('correos-'):
+            from config.weyland import leer_valores
+            from integraciones.backend_actual import ajustes_correo
+            from integraciones.gestion_correo_web import ejecutar_comando_correo
+            from pathlib import Path
+            raiz = Path(__file__).resolve().parent
+            valores = leer_valores()
+            return ejecutar_comando_correo(args, valores, raiz, lambda: ajustes_correo(valores, raiz))
         config = cargar_configuracion()
         if args.comando == 'web-procesar':
             if not config.modulo_scraping:
@@ -109,8 +116,9 @@ def main(argv=None):
         print("Procesos ejecutados:", len(entradas), "- Con errores:", fallos)
         return 1 if fallos else 0
     except Exception as error:
-        print("Error:", config.ocultar(error) if config else "No se pudo cargar la configuracion", file=sys.stderr)
-        return 1
+        diagnostico = diagnosticar_error(error, correo=args.comando.startswith('correos-'))
+        print(diagnostico.texto(), file=sys.stderr)
+        return diagnostico.codigo
 
 
 if __name__ == "__main__":
