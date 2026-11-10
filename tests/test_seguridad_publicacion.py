@@ -1,7 +1,10 @@
 """La proteccion de publicacion inspecciona contenido, no solo patrones gitignore."""
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
-from tools.verificar_publicacion import evaluar_archivo
+from tools.verificar_publicacion import evaluar_archivo, secretos_locales
 
 
 class SeguridadPublicacionTests(unittest.TestCase):
@@ -36,3 +39,10 @@ class SeguridadPublicacionTests(unittest.TestCase):
     def test_bloquea_binarios_y_archivos_grandes(self):
         self.assertTrue(evaluar_archivo('archivo.bin', b'\xff\xfe'))
         self.assertTrue(evaluar_archivo('archivo.txt', b'x' * (1024 * 1024 + 1)))
+
+    def test_usuario_del_runner_no_se_confunde_con_credencial(self):
+        with TemporaryDirectory() as temporal, patch.dict('os.environ',
+                {'USER': 'runner', 'USERNAME': 'runner', 'BACKEND_PASSWORD': 'valor_privado_ficticio'}, clear=True):
+            secretos = secretos_locales(Path(temporal))
+        self.assertNotIn('runner', secretos)
+        self.assertIn('valor_privado_ficticio', secretos)
